@@ -31,6 +31,13 @@ python3 popgenWindows.py -w 50000 -p LFS -p TBS -p TB -o Outgroup --popsFile all
 #10kb
 python3 popgenWindows.py -w 10000 -p LFS -p TBS -p TB -o Outgroup --popsFile all10pop_8qa_3qu.txt -g Quercus_all267_allchr_flt2SNP.geno2.gz -f phased -T 70 --analysis {popFreq,popDist,popPairDist} -o Quercus_allchr_LFS_TBS_TB_allstatistic_w10k.csv.gz
 
+## F-branch test
+# step1 obtain tree.txt file
+Dsuite Dtrios Quercus_all284_allchr_flt2SNPnosigmiss2.vcf.gz LFS_DWX_DW.txt -t LFS_DWX_DW.nwk -o ./LFS_DWX_DW 
+# step2 f-branch analysis
+Dsuite Fbranch LFS_DWX_DW.nwk LFS_DWX_DW__tree.txt > LFS_DWX_DW_branch.txt
+# step3 f-branch statistic be visualized using dtools.py script
+python3 ./dtools.py ./LFS_DWX_DW_branch.txt ./LFS_DWX_DW.nwk 
 
 ########################################################################################################################
 # Part 2 Mantel and partial Mantel regression tests by R package 'vegan'
@@ -156,3 +163,26 @@ KM_HCS_result[which(KM_HCS_result$logFC <= -1 & KM_HCS_result$FDR <=0.05),'sig']
 KM_HCS_result[which( KM_HCS_result$FDR >0.05),'sig'] <- 'NotSig'
 write.table(KM_HCS_result,file="D:/quercus/resequence/RNA/gsnap_count/edgeR_expression/HCS_KM.txt",row.name=F,quote=FALSE,sep="\t")
 
+
+########################################################################################################################
+# Part 4 identification of inversion by Delly v0.8.7 and find the intersection with TE
+########################################################################################################################
+##inversion calling (TB1 as example)
+# step1 inversion calling by individual's bam file
+delly call -t INV -o TB1_delly.bcf –g /data/cjevol/yxzhu/InvBFM/Quercus_a/Quercus_a_Chr9_12.fasta /data/cjevol/yxzhu/InvBFM/Quercus_v/TB1_chr9_12_reheader.bam
+# step2 filter low quality inversion data
+less TB1_delly.vcf|head -49 >TB1_delly_filter.vcf
+less TB1_delly.vcf|awk '{if($7=="PASS" && $6 > =100)print}'>>TB1_delly_filter. vcf
+# step3 get inversion intersection by bcftools isec function(At least twice in five or four individuals)
+bgzip TB1_delly_filter.vcf
+bcftools index TB1_delly_filter.vcf.gz
+bcftools isec -n+2 -c all -p merge TB1_delly_filter.vcf.gz TB2_delly_filter.vcf.gz TB3_delly_filter.vcf.gz TB4_delly_filter.vcf.gz TB5_delly_filter.vcf.gz
+bcftools merge --force-samples -o TB_merge.vcf.gz -O z TB1_delly_filter.vcf.gz TB2_delly_filter.vcf.gz TB3_delly_filter.vcf.gz TB4_delly_filter.vcf.gz TB5_delly_filter.vcf.gz
+bcftools index TB_merge.vcf.gz
+bcftools view -T  merge/sites.txt TB_merge.vcf.gz -O z -o TB.select.vcf.gz
+# step4 identify TE in 5' and 3' ends of inversions(±1kb) by python script
+python ../scripts/inversion_search_TE.py DW_1_12.vcf.gz ../Quercus_a_chr1_12_TEanno.gff > ./TE_search_step1/DW_TE_search.txt
+# step5  filter TE in both 5' and 3' ends of inversions(±1kb) by python script
+python ../scripts/inversion_TE_define.py ./TE_search_step1/DW_TE_search.txt > ./TE_define_step2/DW_TE_define.txt
+# step6 merge inversion with TEs and without TEs by python script
+python ../scripts/inv_TE_merge.py DW_1_12.vcf.gz ./TE_define_step2/DW_TE_define.txt > ./inv_TE_merge_step3/DW_inv_TE_merge.txt
