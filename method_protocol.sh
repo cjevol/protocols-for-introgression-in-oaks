@@ -1,4 +1,13 @@
 ########################################################################################################################
+# Documents and scripts were written by: Ruirui Fu & Yuxiang Zhu
+# For manuscript: Ruirui Fu, et al. (2022). "Genome-wide analyses of introgression between two sympatric Asian oak species" (under review). 
+# email: furuirui@zju.edu.cn
+# Jun Chen Lab. 
+########################################################################################################################
+
+
+
+########################################################################################################################
 # Part 1 ABBA-BABA test 
 # This analysis was performed using the python script 'ABBABABAwindows.py' ,'calculate_abba_baba.r' and Fst values for the same windows were calculated using the script 'popgenWindows.py'
 # The script is sourced at the following URL
@@ -69,8 +78,6 @@ mantel(all91envir, geodistancematrix)
 # partial Mantel test
 mantel.partial( geodistancematrix,PSIG, Fst)
 mantel.partial( geodistancematrix,PSIG, all91envir)
-mantel.partial(environ8matrix, PSIG, geodistancematrix)
-mantel.partial(environ8matrix, PSIG, Fst)
 mantel.partial(all91envir, PSIG, geodistancematrix)
 mantel.partial(all91envir, PSIG, Fst)
 mantel.partial(longitude, PSIG, geodistancematrix)
@@ -186,3 +193,4 @@ python ../scripts/inversion_search_TE.py DW_1_12.vcf.gz ../Quercus_a_chr1_12_TEa
 python ../scripts/inversion_TE_define.py ./TE_search_step1/DW_TE_search.txt > ./TE_define_step2/DW_TE_define.txt
 # step6 merge inversion with TEs and without TEs by python script
 python ../scripts/inv_TE_merge.py DW_1_12.vcf.gz ./TE_define_step2/DW_TE_define.txt > ./inv_TE_merge_step3/DW_inv_TE_merge.txt
+
